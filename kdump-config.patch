@@ -1,0 +1,23 @@
+--- /usr/sbin/kdump-config	2014-10-03 11:46:25.000000000 +0200
++++ /usr/sbin/kdump-config	2015-12-15 13:40:33.540221000 +0100
+@@ -323,8 +323,10 @@
+ 
+ 	mkdir -p $KDUMP_STAMPDIR
+ 
++	log_action_msg "Starting memory monitoring"
++	vmstat 1 &
+ 	log_action_msg "running makedumpfile $MAKEDUMP_ARGS $vmcore_file $KDUMP_CORETEMP"
+-	makedumpfile $MAKEDUMP_ARGS $vmcore_file $KDUMP_CORETEMP
++	makedumpfile $MAKEDUMP_ARGS $vmcore_file $KDUMP_CORETEMP > /dev/null 2>&1
+ 	if [ $? -ne 0 ] ; then
+ 		log_failure_msg "$NAME: makedumpfile failed, falling back to 'cp'"
+ 		logger -t $NAME "makedumpfile failed, falling back to 'cp'"
+@@ -343,6 +345,8 @@
+ 		logger -t $NAME "failed to save vmcore in $KDUMP_STAMPDIR"
+ 	fi
+ 
++	log_action_msg "Stopping memory monitoring"
++	killall vmstat
+ 	log_action_msg "running makedumpfile --dump-dmesg $vmcore_file $KDUMP_DMESGFILE"
+ 	makedumpfile --dump-dmesg $vmcore_file $KDUMP_DMESGFILE
+ 	ERROR=$?
