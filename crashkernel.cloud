@@ -1,0 +1,43 @@
+#cloud-config
+# Update apt database on first boot
+# (ie run apt-get update)
+#
+# Default: true
+# Aliases: apt_update
+#package_update: true
+
+# Upgrade the instance on first boot
+# (ie run apt-get upgrade)
+#
+# Default: false
+# Aliases: apt_upgrade
+#package_upgrade: true
+hostname: crashkernel-test
+manage_etc_hosts: true
+apt_proxy: http://192.168.0.13:8000
+
+ssh_import_id: [louis-bouchard]
+
+ssh_authorized_keys:
+  - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCeg2+JBm29O9pu37fhDbIPufKfzalRxrVZ0b2nK3tgW4ndiApiz6ybLW06fcsUgVNzM2uSgmY66vFEPTl9LClOGAc3bDtqk6F+6/L7lJAtsawSqcyTjCwCuVBFpxNGW93P8czbjJUvEHJz6pRSxkObktaNPeK2PQKRiXHDiPakWBftg9oUn3WTOPBibG14OAtGGmq+D6T9yl04bsQ3/lJd/rcP1b7MEeLe4a3s9gS2iYMC7/XxPmcSLjZ0pUQF/0Q1P++oxVhdL4L+2xxUbofb8jBXtIw+1eper9AWU8TcWNBZUo1c2KOP9PDXRrgo+ZSPmnomGV4GwpUaNFLkU5Kn caribou@marvin
+
+packages:
+ - linux-crashdump
+
+write_files:
+-   encoding: b64
+    content: LS0tIC91c3Ivc2Jpbi9rZHVtcC1jb25maWcJMjAxNC0xMC0wMyAxMTo0NjoyNS4wMDAwMDAwMDAgKzAyMDAKKysrIC91c3Ivc2Jpbi9rZHVtcC1jb25maWcJMjAxNS0xMi0xNSAxMzo0MDozMy41NDAyMjEwMDAgKzAxMDAKQEAgLTMyMyw4ICszMjMsMTAgQEAKIAogCW1rZGlyIC1wICRLRFVNUF9TVEFNUERJUgogCisJbG9nX2FjdGlvbl9tc2cgIlN0YXJ0aW5nIG1lbW9yeSBtb25pdG9yaW5nIgorCXZtc3RhdCAxICYKIAlsb2dfYWN0aW9uX21zZyAicnVubmluZyBtYWtlZHVtcGZpbGUgJE1BS0VEVU1QX0FSR1MgJHZtY29yZV9maWxlICRLRFVNUF9DT1JFVEVNUCIKLQltYWtlZHVtcGZpbGUgJE1BS0VEVU1QX0FSR1MgJHZtY29yZV9maWxlICRLRFVNUF9DT1JFVEVNUAorCW1ha2VkdW1wZmlsZSAkTUFLRURVTVBfQVJHUyAkdm1jb3JlX2ZpbGUgJEtEVU1QX0NPUkVURU1QID4gL2Rldi9udWxsIDI+JjEKIAlpZiBbICQ/IC1uZSAwIF0gOyB0aGVuCiAJCWxvZ19mYWlsdXJlX21zZyAiJE5BTUU6IG1ha2VkdW1wZmlsZSBmYWlsZWQsIGZhbGxpbmcgYmFjayB0byAnY3AnIgogCQlsb2dnZXIgLXQgJE5BTUUgIm1ha2VkdW1wZmlsZSBmYWlsZWQsIGZhbGxpbmcgYmFjayB0byAnY3AnIgpAQCAtMzQzLDYgKzM0NSw4IEBACiAJCWxvZ2dlciAtdCAkTkFNRSAiZmFpbGVkIHRvIHNhdmUgdm1jb3JlIGluICRLRFVNUF9TVEFNUERJUiIKIAlmaQogCisJbG9nX2FjdGlvbl9tc2cgIlN0b3BwaW5nIG1lbW9yeSBtb25pdG9yaW5nIgorCWtpbGxhbGwgdm1zdGF0CiAJbG9nX2FjdGlvbl9tc2cgInJ1bm5pbmcgbWFrZWR1bXBmaWxlIC0tZHVtcC1kbWVzZyAkdm1jb3JlX2ZpbGUgJEtEVU1QX0RNRVNHRklMRSIKIAltYWtlZHVtcGZpbGUgLS1kdW1wLWRtZXNnICR2bWNvcmVfZmlsZSAkS0RVTVBfRE1FU0dGSUxFCiAJRVJST1I9JD8K
+    owner: root:root
+    path: /kdump-config.patch
+    permissions: '0644'
+
+runcmd:
+ - [ sed, -i, 's/USE_KDUMP=0/USE_KDUMP=1/', /etc/default/kdump-tools ]
+# - [ sed, -i, 's/#MAKEDUMP_ARGS="-c -d 31"/MAKEDUMP_ARGS="-d 31"/', /etc/default/kdump-tools ]
+ - echo "kernel.sysrq = 1" >> /etc/sysctl.conf
+ - patch -p0 < /kdump-config.patch
+power_state:
+ delay: now
+ mode: reboot
+ message: crashkernel-test reboot completed
+
