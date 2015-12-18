@@ -16,6 +16,7 @@ class TestVM(object):
     def Start(self):
         try:
             os.unlink(self.console_file)
+            print("Starting %s VM" % self.hostname)
             subprocess.check_output(
                 ["uvt-kvm", "create", self.hostname, "--memory", self.memory,
                  "--disk", self.disksize,  "--cpu", "2", "--user-data",
@@ -26,6 +27,7 @@ class TestVM(object):
 
     def Destroy(self):
         try:
+            print("Terminating %s VM" % self.hostname)
             subprocess.check_output(
                 ["uvt-kvm", "destroy", self.hostname],
                 stderr=subprocess.DEVNULL)
