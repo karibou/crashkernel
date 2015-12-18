@@ -4,10 +4,8 @@ import sys
 import subprocess
 import time
 
-_restart_msg = b' * Will now restart\r\n'
-_restart_timeout = 60
-_login_prompt = b'crashkernel-test login: '
-_login_timeout = 60
+_events = {'restart': [b' * Will now restart\r\n', 60],
+           'login_prompt': [b'crashkernel-test login: ', 60]}
 
 
 class TestVM(object):
@@ -71,34 +69,16 @@ class TestVM(object):
 #HasCrashed="SysRq : Trigger a crash"
 
 
-def Wait_restart(vm):
+def Wait_for(event, vm):
 
-    print("Waiting for restart to appear")
     loop = 0
     output = vm.Read_console()
-    while _restart_msg not in output and loop <= _restart_timeout:
+    while event[0] not in output and loop <= event[1]:
         time.sleep(5)
         output = vm.Read_console()
         loop += 5
-    if loop > _restart_timeout:
-        raise TimeoutError("Timed out waiting for restart")
-
-    print("Got restart")
-
-
-def Wait_login_prompt(vm):
-    print("Waiting for boot prompt to appear")
-    loop = 0
-    output = vm.Read_console()
-    while _login_prompt not in output and loop <= _login_timeout:
-        time.sleep(5)
-        output = vm.Read_console()
-        loop += 5
-    if loop > _login_timeout:
-        raise TimeoutError("Timed out waiting for login prompt")
-
-    print("Got login prompt")
-    return
+    if loop > event[1]:
+        raise TimeoutError
 
 
 def main():
@@ -109,20 +89,18 @@ def main():
     test_vm = TestVM()
     test_vm.Start()
     test_vm.Open_console()
-    try:
-        Wait_restart(test_vm)
-    except TimeoutError as err:
-        print("TimeoutError : %s" % err)
-    try:
-        Wait_login_prompt(test_vm)
-    except TimeoutError as err:
-        print("TimeoutError : %s" % err)
+    for event in ('restart', 'login_prompt'):
+        print("Waiting for %s" % event)
+        try:
+            Wait_for(_events[event], test_vm)
+        except TimeoutError as err:
+            print("TimeoutError waiting for %s" % event)
 
     test_vm.panic()
     try:
-        Wait_login_prompt(test_vm)
+        Wait_for(_events['login_prompt'], test_vm)
     except TimeoutError as err:
-        print("TimeoutError : %s" % err)
+        print("TimeoutError : %s" % event)
 
     test_vm.Destroy()
 
