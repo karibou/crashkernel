@@ -123,8 +123,9 @@ def main():
         print("Waiting for %s" % event)
         try:
             Wait_for(_events[event], test_vm)
-        except TimeoutError as err:
+        except TimeoutError:
             print("TimeoutError waiting for %s" % event)
+            exit(1)
 
     test_vm.panic()
     try:
