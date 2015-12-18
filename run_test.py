@@ -18,7 +18,7 @@ class TestVM(object):
         self.keep = False
         self.console = None
 
-    def Start(self):
+    def Create(self):
         try:
             os.unlink(self.console_file)
             print("Starting %s VM" % self.hostname)
@@ -89,6 +89,11 @@ def main():
 
     test_vm = TestVM()
     test_vm.keep = True
+    try:
+        test_vm.Create()
+    except RuntimeError:
+        exit(1)
+
     test_vm.Open_console()
     for event in ('restart', 'login_prompt'):
         print("Waiting for %s" % event)
