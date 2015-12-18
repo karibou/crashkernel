@@ -127,11 +127,28 @@ def main():
             print("TimeoutError waiting for %s" % event)
             exit(1)
 
-    test_vm.panic()
-    try:
-        Wait_for(_events['login_prompt'], test_vm)
-    except TimeoutError as err:
-        print("TimeoutError : %s" % event)
+    for memsize in range(20, 2, -2):
+        time.sleep(10)
+        test_vm.Panic()
+        try:
+            Wait_for(_events['login_prompt'], test_vm)
+        except TimeoutError:
+            print("TimeoutError waiting for %s" % 'login_prompt')
+            exit(1)
+        test_vm.Resize(memsize)
+        time.sleep(5)
+        test_vm.Stop()
+        try:
+            Wait_for(_events['stop'], test_vm)
+        except TimeoutError:
+            print("TimeoutError waiting for %s" % 'stop')
+            exit(1)
+        test_vm.Start()
+        try:
+            Wait_for(_events['login_prompt'], test_vm)
+        except TimeoutError:
+            print("TimeoutError waiting for %s" % 'login_prompt')
+            exit(1)
 
     if test_vm.keep:
         test_vm.Stop()
