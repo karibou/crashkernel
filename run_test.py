@@ -20,8 +20,11 @@ class TestVM(object):
 
     def Create(self):
         try:
-            os.unlink(self.console_file)
-            print("Starting %s VM" % self.hostname)
+            try:
+                os.unlink(self.console_file)
+            except FileNotFoundError:
+                pass
+            print("Creating %s VM" % self.hostname)
             subprocess.check_output(
                 ["uvt-kvm", "create", self.hostname, "--memory", self.memory,
                  "--disk", self.disksize,  "--cpu", "2", "--user-data",
