@@ -5,7 +5,8 @@ import subprocess
 import time
 
 _events = {'restart': [b' * Will now restart\r\n', 60],
-           'login_prompt': [b'crashkernel-test login: ', 60]}
+           'login_prompt': [b'crashkernel-test login: ', 60],
+           'stop': [b' * Will now halt\r\n', 60],}
 
 
 class TestVM(object):
@@ -32,6 +33,22 @@ class TestVM(object):
                 stderr=subprocess.DEVNULL)
         except subprocess.CalledProcessError:
             print("Unable to create %s VM" % self.hostname)
+    def Start(self):
+        try:
+            print("Starting %s" % self.hostname)
+            subprocess.check_output(
+                ["virsh", "start", self.hostname], stderr=subprocess.DEVNULL)
+        except subprocess.CalledProcessError:
+            print("Unable to start %s" % self.hostname)
+
+    def Stop(self):
+        try:
+            print("Stopping %s" % self.hostname)
+            subprocess.check_output(
+                ["virsh", "shutdown", self.hostname], stderr=subprocess.DEVNULL)
+        except subprocess.CalledProcessError:
+            print("Unable to stop %s" % self.hostname)
+
 
     def Destroy(self):
         try:
@@ -65,12 +82,14 @@ class TestVM(object):
         except subprocess.CalledProcessError:
             print("Unable to panic %s VM" % self.hostname)
 
-# class CrashTest(object):
-#     """crashkernel test to be executed"""
-#     def __init__(self):
-#IsRebooted="LTS $Hostname ttyS0"
-#IsShutdown="reboot: Power down"
-#HasCrashed="SysRq : Trigger a crash"
+    def Resize(self, size):
+        try:
+            print("Resizing %s to %dG" % (self.hostname,size))
+            subprocess.check_output(
+                ["virsh", "setmaxmem", "--size=%sG" % size, "--config",
+                 self.hostname], stderr=subprocess.DEVNULL)
+        except subprocess.CalledProcessError:
+            print("Unable set %s to size %d" % (self.hostname, size))
 
 
 def Wait_for(event, vm):
