@@ -15,6 +15,7 @@ class TestVM(object):
 
     def Start(self):
         try:
+            os.unlink(self.console_file)
             subprocess.check_output(
                 ["uvt-kvm", "create", self.hostname, "--memory", self.memory,
                  "--disk", self.disksize,  "--cpu", "2", "--user-data",
