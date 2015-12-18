@@ -33,6 +33,8 @@ class TestVM(object):
                 stderr=subprocess.DEVNULL)
         except subprocess.CalledProcessError:
             print("Unable to create %s VM" % self.hostname)
+            raise RuntimeError
+
     def Start(self):
         try:
             print("Starting %s" % self.hostname)
