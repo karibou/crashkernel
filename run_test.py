@@ -15,6 +15,7 @@ class TestVM(object):
         self.console_file = '/var/log/libvirt/qemu/crashkernel-test.log'
         self.memory = '22528'
         self.disksize = '100'
+        self.keep = False
         self.console = None
 
     def Start(self):
@@ -87,7 +88,7 @@ def main():
         exit(1)
 
     test_vm = TestVM()
-    test_vm.Start()
+    test_vm.keep = True
     test_vm.Open_console()
     for event in ('restart', 'login_prompt'):
         print("Waiting for %s" % event)
@@ -102,7 +103,10 @@ def main():
     except TimeoutError as err:
         print("TimeoutError : %s" % event)
 
-    test_vm.Destroy()
+    if test_vm.keep:
+        test_vm.Stop()
+    else:
+        test_vm.Destroy()
 
 if __name__ == '__main__':
     main()
