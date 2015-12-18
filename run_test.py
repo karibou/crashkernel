@@ -2,6 +2,12 @@
 import os
 import sys
 import subprocess
+import time
+
+_restart_msg = b' * Will now restart\r\n'
+_restart_timeout = 60
+_login_prompt = b'crashkernel-test login: '
+_login_timeout = 60
 
 
 class TestVM(object):
@@ -55,17 +61,60 @@ class TestVM(object):
 #IsShutdown="reboot: Power down"
 #HasCrashed="SysRq : Trigger a crash"
 
-def Wait_boot_end(vm):
-    
+
+def Wait_restart(vm):
+
+    print("Waiting for restart to appear")
+    loop = 0
     output = vm.Read_console()
-    # Need to continue here
+    while _restart_msg not in output and loop <= _restart_timeout:
+        time.sleep(5)
+        output = vm.Read_console()
+        loop += 5
+    if loop > _restart_timeout:
+        raise TimeoutError("Timed out waiting for restart")
+
+    print("Got restart")
+
+
+def Wait_login_prompt(vm):
+    print("Waiting for boot prompt to appear")
+    loop = 0
+    output = vm.Read_console()
+    while _login_prompt not in output and loop <= _login_timeout:
+        time.sleep(5)
+        output = vm.Read_console()
+        loop += 5
+    if loop > _login_timeout:
+        raise TimeoutError("Timed out waiting for login prompt")
+
+    print("Got login prompt")
     return
 
+
 def main():
+    if os.getuid() != 0:
+        print("This script must be run as root !")
+        exit(1)
+
     test_vm = TestVM()
     test_vm.Start()
     test_vm.Open_console()
-    Wait_boot_end(test_vm)
+    try:
+        Wait_restart(test_vm)
+    except TimeoutError as err:
+        print("TimeoutError : %s" % err)
+    try:
+        Wait_login_prompt(test_vm)
+    except TimeoutError as err:
+        print("TimeoutError : %s" % err)
+
+    test_vm.panic()
+    try:
+        Wait_login_prompt(test_vm)
+    except TimeoutError as err:
+        print("TimeoutError : %s" % err)
+
     test_vm.Destroy()
 
 if __name__ == '__main__':
