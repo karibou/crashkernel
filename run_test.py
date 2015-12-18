@@ -56,7 +56,7 @@ class TestVM(object):
     def Read_console(self):
         return self.console.readlines()
 
-    def panic(self):
+    def Panic(self):
         try:
             print("Sending SysRq to %s" % self.hostname)
             subprocess.check_output(
