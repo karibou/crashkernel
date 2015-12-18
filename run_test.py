@@ -54,6 +54,15 @@ class TestVM(object):
     def Read_console(self):
         return self.console.readlines()
 
+    def panic(self):
+        try:
+            print("Sending SysRq to %s" % self.hostname)
+            subprocess.check_output(
+                ["virsh", "send-key", self.hostname, "KEY_LEFTALT",
+                 "KEY_SYSRQ", "KEY_C"], stderr=subprocess.DEVNULL)
+        except subprocess.CalledProcessError:
+            print("Unable to panic %s VM" % self.hostname)
+
 # class CrashTest(object):
 #     """crashkernel test to be executed"""
 #     def __init__(self):
