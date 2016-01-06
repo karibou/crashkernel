@@ -75,6 +75,16 @@ class TestVM(object):
         except subprocess.CalledProcessError:
             print("Unable to stop %s" % self.hostname)
 
+    def Reset(self):
+        try:
+            print("Resetting %s" % self.hostname)
+            subprocess.check_output(
+                ["virsh", "reset", self.hostname],
+                stderr=subprocess.DEVNULL)
+        except subprocess.CalledProcessError:
+            print("Unable to reset %s" % self.hostname)
+            raise OSError
+
     def Destroy(self):
         try:
             print("Terminating %s VM" % self.hostname)
@@ -164,7 +174,13 @@ def main():
             Wait_for(_events['login_prompt'], test_vm)
         except TimeoutError:
             print("TimeoutError waiting for %s" % 'login_prompt')
-            exit(1)
+            print("Will try to reset VM to continue")
+            try:
+                test_vm.Reset()
+                Wait_for(_events['login_prompt'], test_vm)
+            except:
+                exit(1)
+
         test_vm.Resize(memsize)
         time.sleep(5)
         test_vm.Stop()
