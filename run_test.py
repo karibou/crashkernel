@@ -7,6 +7,7 @@ import argparse
 
 vm_args = []
 
+
 def parse_arguments(args):
         """
         Valid arguments are :
@@ -17,19 +18,23 @@ def parse_arguments(args):
         --login-timeout | -l    : Time to wait to get the VM prompt
         """
         parser = argparse.ArgumentParser(
-                    description='Run crashkernel memory tests')
+            description='Run crashkernel memory tests')
         parser.add_argument('-m', '--memory', nargs=1, type=int, default=[22],
                             help='VM memory size to use (default: 22G)')
         parser.add_argument('-d', '--disksize', nargs=1, default=['100'],
                             help='VM disksize to use (default: 100G)')
-        parser.add_argument('-s', '--stop-timeout', nargs=1, type=int, default=[60],
+        parser.add_argument('-s', '--stop-timeout', nargs=1, type=int,
+                            default=[60],
                             help='Timeout to stop VM (default: 60s)')
-        parser.add_argument('-r', '--restart-timeout', nargs=1, type=int, default=[60],
+        parser.add_argument('-r', '--restart-timeout', nargs=1, type=int,
+                            default=[60],
                             help='Timeout to restart VM (default: 60s)')
-        parser.add_argument('-l', '--login-timeout', nargs=1, type=int, default=[60],
+        parser.add_argument('-l', '--login-timeout', nargs=1, type=int,
+                            default=[60],
                             help='Timeout to get login prompt (default: 60s)')
         args = vars(parser.parse_args())
         return(args)
+
 
 class TestVM(object):
 
@@ -48,7 +53,7 @@ class TestVM(object):
             except FileNotFoundError:
                 pass
             print("Creating %s VM (mem: %dG, disk: %sG)" % (self.hostname,
-                  (int(self.memory)/ 1024), self.disksize ))
+                  (int(self.memory) / 1024), self.disksize))
             subprocess.check_output(
                 ["uvt-kvm", "create", self.hostname, "--memory", self.memory,
                  "--disk", self.disksize,  "--cpu", "2", "--user-data",
@@ -146,10 +151,12 @@ def main():
 
     vm_args = parse_arguments(sys.argv[1:])
 
-    _events = {'restart': [b' * Will now restart\r\n', vm_args['restart_timeout'][0]],
-           'login_prompt': [b'crashkernel-test login: ', vm_args['login_timeout'][0]],
-           'stop': [b' * Will now halt\r\n', vm_args['stop_timeout'][0]],
-           }
+    _events = {'restart':
+               [b' * Will now restart\r\n', vm_args['restart_timeout'][0]],
+               'login_prompt':
+               [b'crashkernel-test login: ', vm_args['login_timeout'][0]],
+               'stop': [b' * Will now halt\r\n', vm_args['stop_timeout'][0]],
+               }
 
     test_vm = TestVM(vm_args)
     test_vm.keep = True
@@ -171,7 +178,8 @@ def main():
         time.sleep(10)
         test_vm.Panic()
         try:
-            print("Waiting %s sec for login prompt" % _events['login_prompt'][1])
+            print("Waiting %s sec for login prompt" %
+                  _events['login_prompt'][1])
             Wait_for(_events['login_prompt'], test_vm)
         except TimeoutError:
             print("TimeoutError waiting for %s" % 'login_prompt')
