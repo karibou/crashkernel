@@ -160,7 +160,7 @@ def main():
 
     test_vm.Open_console()
     for event in ('restart', 'login_prompt'):
-        print("Waiting for %s" % event)
+        print("Waiting %s sec for %s" % (_events[event][1], event))
         try:
             Wait_for(_events[event], test_vm)
         except TimeoutError:
@@ -171,6 +171,7 @@ def main():
         time.sleep(10)
         test_vm.Panic()
         try:
+            print("Waiting %s sec for login prompt" % _events['login_prompt'][1])
             Wait_for(_events['login_prompt'], test_vm)
         except TimeoutError:
             print("TimeoutError waiting for %s" % 'login_prompt')
