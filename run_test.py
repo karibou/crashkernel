@@ -6,7 +6,8 @@ import time
 
 _events = {'restart': [b' * Will now restart\r\n', 60],
            'login_prompt': [b'crashkernel-test login: ', 60],
-           'stop': [b' * Will now halt\r\n', 60],}
+           'stop': [b' * Will now halt\r\n', 60],
+           }
 
 
 class TestVM(object):
@@ -47,10 +48,10 @@ class TestVM(object):
         try:
             print("Stopping %s" % self.hostname)
             subprocess.check_output(
-                ["virsh", "shutdown", self.hostname], stderr=subprocess.DEVNULL)
+                ["virsh", "shutdown", self.hostname],
+                stderr=subprocess.DEVNULL)
         except subprocess.CalledProcessError:
             print("Unable to stop %s" % self.hostname)
-
 
     def Destroy(self):
         try:
@@ -86,7 +87,7 @@ class TestVM(object):
 
     def Resize(self, size):
         try:
-            print("Resizing %s to %dG" % (self.hostname,size))
+            print("Resizing %s to %dG" % (self.hostname, size))
             subprocess.check_output(
                 ["virsh", "setmaxmem", "--size=%sG" % size, "--config",
                  self.hostname], stderr=subprocess.DEVNULL)
