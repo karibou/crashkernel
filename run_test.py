@@ -3,20 +3,37 @@ import os
 import sys
 import subprocess
 import time
+import argparse
 
 _events = {'restart': [b' * Will now restart\r\n', 60],
            'login_prompt': [b'crashkernel-test login: ', 60],
            'stop': [b' * Will now halt\r\n', 60],
            }
 
+vm_args = []
+
+def parse_arguments(args):
+        """
+        Valid arguments are :
+        --memory | -m   : Size of VM in Gb
+        --disksize | -d : Disksize in Gb
+        """
+        parser = argparse.ArgumentParser(
+                    description='Run crashkernel memory tests')
+        parser.add_argument('-m', '--memory', nargs=1, default=['22'],
+                            help='VM memory size to use (default: 22G)')
+        parser.add_argument('-d', '--disksize', nargs=1, default=['100'],
+                            help='VM disksize to use (default: 100G)')
+        args = vars(parser.parse_args())
+        return(args)
 
 class TestVM(object):
 
-    def __init__(self):
+    def __init__(self, args):
         self.hostname = 'crashkernel-test'
         self.console_file = '/var/log/libvirt/qemu/crashkernel-test.log'
-        self.memory = '22528'
-        self.disksize = '100'
+        self.memory = str(int(args['memory'][0])*1024)
+        self.disksize = args['disksize'][0]
         self.keep = False
         self.console = None
 
@@ -26,7 +43,8 @@ class TestVM(object):
                 os.unlink(self.console_file)
             except FileNotFoundError:
                 pass
-            print("Creating %s VM" % self.hostname)
+            print("Creating %s VM (mem: %dG, disk: %sG)" % (self.hostname,
+                  (int(self.memory)/ 1024), self.disksize ))
             subprocess.check_output(
                 ["uvt-kvm", "create", self.hostname, "--memory", self.memory,
                  "--disk", self.disksize,  "--cpu", "2", "--user-data",
@@ -112,7 +130,9 @@ def main():
         print("This script must be run as root !")
         exit(1)
 
-    test_vm = TestVM()
+    vm_args = parse_arguments(sys.argv[1:])
+
+    test_vm = TestVM(vm_args)
     test_vm.keep = True
     try:
         test_vm.Create()
@@ -128,7 +148,7 @@ def main():
             print("TimeoutError waiting for %s" % event)
             exit(1)
 
-    for memsize in range(20, 2, -2):
+    for memsize in range(int(vm_args['memory'][0]), 2, -2):
         time.sleep(10)
         test_vm.Panic()
         try:
