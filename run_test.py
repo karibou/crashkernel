@@ -167,7 +167,7 @@ def main():
             print("TimeoutError waiting for %s" % event)
             exit(1)
 
-    for memsize in range(int(vm_args['memory'][0]), 2, -2):
+    for memsize in range(vm_args['memory'][0]-2, 2, -2):
         time.sleep(10)
         test_vm.Panic()
         try:
