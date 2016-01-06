@@ -5,11 +5,6 @@ import subprocess
 import time
 import argparse
 
-_events = {'restart': [b' * Will now restart\r\n', 60],
-           'login_prompt': [b'crashkernel-test login: ', 60],
-           'stop': [b' * Will now halt\r\n', 60],
-           }
-
 vm_args = []
 
 def parse_arguments(args):
@@ -17,13 +12,22 @@ def parse_arguments(args):
         Valid arguments are :
         --memory | -m   : Size of VM in Gb
         --disksize | -d : Disksize in Gb
+        --stop-timeout | -s : Time to wait for VM to stop
+        --restart-timeout | -r  : Time to wait for VM to restart
+        --login-timeout | -l    : Time to wait to get the VM prompt
         """
         parser = argparse.ArgumentParser(
                     description='Run crashkernel memory tests')
-        parser.add_argument('-m', '--memory', nargs=1, default=['22'],
+        parser.add_argument('-m', '--memory', nargs=1, type=int, default=[22],
                             help='VM memory size to use (default: 22G)')
         parser.add_argument('-d', '--disksize', nargs=1, default=['100'],
                             help='VM disksize to use (default: 100G)')
+        parser.add_argument('-s', '--stop-timeout', nargs=1, type=int, default=[60],
+                            help='Timeout to stop VM (default: 60s)')
+        parser.add_argument('-r', '--restart-timeout', nargs=1, type=int, default=[60],
+                            help='Timeout to restart VM (default: 60s)')
+        parser.add_argument('-l', '--login-timeout', nargs=1, type=int, default=[60],
+                            help='Timeout to get login prompt (default: 60s)')
         args = vars(parser.parse_args())
         return(args)
 
@@ -32,7 +36,7 @@ class TestVM(object):
     def __init__(self, args):
         self.hostname = 'crashkernel-test'
         self.console_file = '/var/log/libvirt/qemu/crashkernel-test.log'
-        self.memory = str(int(args['memory'][0])*1024)
+        self.memory = str(args['memory'][0]*1024)
         self.disksize = args['disksize'][0]
         self.keep = False
         self.console = None
@@ -131,6 +135,11 @@ def main():
         exit(1)
 
     vm_args = parse_arguments(sys.argv[1:])
+
+    _events = {'restart': [b' * Will now restart\r\n', vm_args['restart_timeout'][0]],
+           'login_prompt': [b'crashkernel-test login: ', vm_args['login_timeout'][0]],
+           'stop': [b' * Will now halt\r\n', vm_args['stop_timeout'][0]],
+           }
 
     test_vm = TestVM(vm_args)
     test_vm.keep = True
